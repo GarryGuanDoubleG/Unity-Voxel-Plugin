@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\source\PlatformBase.h" />
+    <ClInclude Include="..\..\source\RenderAPI.h" />
+    <ClInclude Include="..\..\source\GLEW\glew.h">
+      <Filter>GLEW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\GLEW\glxew.h">
+      <Filter>GLEW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\GLEW\wglew.h">
+      <Filter>GLEW</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphics.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsD3D9.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsD3D11.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsD3D12.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityGraphicsMetal.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Unity\IUnityInterface.h">
+      <Filter>Unity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\chunk.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\density.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\octree.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\QEFSolver.h">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\SVD.h">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\tables.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\voxelManager.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\VoxelPlugin.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\VoxelVertex.hpp">
+      <Filter>Voxels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\FastNoiseSIMD\FastNoise.h">
+      <Filter>FastNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD.h">
+      <Filter>FastNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_internal.h">
+      <Filter>FastNoise</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\RenderAPI.cpp" />
+    <ClCompile Include="..\..\source\RenderAPI_D3D11.cpp" />
+    <ClCompile Include="..\..\source\RenderAPI_OpenGLCoreES.cpp" />
+    <ClCompile Include="..\..\source\RenderingPlugin.cpp" />
+    <ClCompile Include="..\..\source\GLEW\glew.c">
+      <Filter>GLEW</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderAPI_D3D12.cpp" />
+    <ClCompile Include="..\..\source\chunk.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\density.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\octree.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\QEFSolver.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\tables.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\voxelManager.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\VoxelPlugin.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\VoxelVertex.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\svd.cpp">
+      <Filter>Voxels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoise.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_avx2.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_avx512.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_internal.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_neon.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_sse2.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
+      <Filter>FastNoise</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="GLEW">
+      <UniqueIdentifier>{b44f992b-edcc-4980-b164-3dabfa390292}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unity">
+      <UniqueIdentifier>{c01468d4-90d4-4d19-9a9b-ee2f1b5e9083}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Voxels">
+      <UniqueIdentifier>{d8febaa6-33e3-4648-b23c-b0ee01842c3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FastNoise">
+      <UniqueIdentifier>{d1325b12-6a50-435f-8996-103c63f3bcdd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\source\RenderingPlugin.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\source\RenderAPI_Metal.mm" />
+  </ItemGroup>
+</Project>
