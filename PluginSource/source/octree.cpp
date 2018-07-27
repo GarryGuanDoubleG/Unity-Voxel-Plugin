@@ -43,7 +43,6 @@ void FindEdgeCrossing(Octree *node, const unordered_map<glm::vec3, EdgeInfo> &he
 	{
 		int edgeCount = 0;
 		int k = 0;
-		glm::vec3 pos;
 		glm::vec3 averagePos;
 		glm::vec3 averageNormal(0);
 		QEFSolver qef;

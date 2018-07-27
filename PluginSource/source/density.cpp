@@ -206,7 +206,18 @@ float Density::GetDensity(DensityType type, const glm::vec3 & worldPosition)
 float Density::GetNoise2D(DensityType type, const glm::vec3 & worldPosition)
 {
 	glm::vec3 voxelPos = worldPosition * invVoxelSize * noiseScale;
-	float height = terrainFN.GetSimplexFractal(voxelPos.x, voxelPos.z) * maxHeight * voxelSize; //convert to world Position
+	float height;
+	switch (type)
+	{
+	case Terrain:
+		height = terrainFN.GetSimplexFractal(voxelPos.x, voxelPos.z) * maxHeight * voxelSize; //convert to world Position
+		break;
+	case Cave:
+		height = GetCaveNoise(worldPosition) * maxHeight * voxelSize; //convert to world Position
+		break;
+	default:
+		break;
+	}	
 
 	return worldPosition.y - height;
 }
@@ -381,13 +392,9 @@ bool Density::GenerateMaterialIndices(const glm::vec3 &chunkPos, const glm::vec3
 				
 				//check if chunk has a sign change
 				if (chunkIndex == 0)
-				{
 					material = materialIndices[chunkIndex];
-				}
 				else if (material != materialIndices[chunkIndex])
-				{
 					activeChunk = true;
-				}
 			}
 		}
 	}

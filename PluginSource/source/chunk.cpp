@@ -1,7 +1,9 @@
 #include "VoxelPlugin.hpp"
 
 #define CHUNK_ACTIVE 1
-
+#define GENERATED_SEAM 2
+#define CHUNK_RENDERING 4
+#define CHUNK_BINDED 8
 
 static const glm::vec3 AXIS_OFFSET[3] =
 {
@@ -10,34 +12,34 @@ static const glm::vec3 AXIS_OFFSET[3] =
 	glm::vec3(0.f, 0.f, 1.f)
 };
 
-
-
-Chunk::Chunk() : m_flag(0), m_init(false), m_vao(0), m_vbo(0), m_ebo(0)
+Chunk::Chunk() : m_flag(0), m_vbo(0), m_ebo(0)
 {
+
 }
 
 Chunk::~Chunk()
 {
+	LogToUnity("Deleting Chunk");
 	ClearBufferedData();
 }
 
-bool Chunk::Init(glm::ivec3 chunkIndices, glm::vec3 chunkSize, int voxelSize)
+bool Chunk::Init(glm::ivec3 chunkIndices, glm::vec3 chunkSize, Density::DensityType type, int voxelSize)
 {
 	m_chunkIndex = chunkIndices;
 	m_chunkSize = chunkSize;
 	m_voxelSize = voxelSize;
 	m_invVoxelSize = 1.0f / (float)m_voxelSize;
 
+	m_terrainType = type;
+	
 	m_position = chunkIndices * voxelSize;
 	m_position *= chunkSize;
 
-	m_init = true;
 	memset(m_neighbors, NULL, sizeof(m_neighbors));
 
-	vector<float> heightMap;
-	Density::GenerateHeightMap(m_position, m_chunkSize, heightMap);
-	
-	bool active = Density::GenerateMaterialIndices(m_position, m_chunkSize, m_materialIndices, heightMap);
+	vector<float> densityField;
+
+	bool active = GenerateMaterialIndices();
 
 	if (!active)
 	{
@@ -46,32 +48,57 @@ bool Chunk::Init(glm::ivec3 chunkIndices, glm::vec3 chunkSize, int voxelSize)
 	}
 
 	FindActiveVoxels();
+	if (m_nodeMap.size() == 0)
+	{
+		m_flag = ~CHUNK_ACTIVE;
+		return false;
+	}
 
-	GenerateHermiteHeightMap2D(heightMap);
-	GenerateMesh(heightMap);
+	if (m_terrainType == Density::Terrain)
+		GenerateHermiteHeightMap2D();
+	else
+		GenerateHermiteField();
+
+	GenerateMesh();
 
 	if(m_root == nullptr) return false;
 
 	return true;
 }
 
-bool Chunk::ClearBufferedData()
+void Chunk::ClearBufferedData()
 {
-	//if (m_vao) glDeleteVertexArrays(1, &m_vao);
-	//if (m_vbo) glDeleteBuffers(1, &m_vbo);
-	//if (m_ebo) glDeleteBuffers(1, &m_ebo);
+	if (m_vbo) glDeleteBuffers(1, &m_vbo);
+	if (m_ebo) glDeleteBuffers(1, &m_ebo);
 
-	m_vao = m_vbo = m_ebo = 0;
-	m_vertices.empty();
-	m_triIndices.empty();
-	m_nodeMap.empty();
-	m_hermiteMap.empty();
+}
 
-	if (m_root) 
-		delete m_root;
-	m_root = nullptr;
-	
-	return true;
+bool Chunk::SetBuffers(GLuint vbo, GLuint ebo)
+{
+	m_vbo = vbo;
+	m_ebo = ebo;
+}
+
+bool Chunk::HasGeneratedSeam()
+{
+	return m_flag & GENERATED_SEAM;
+}
+bool Chunk::IsRendering()
+{
+	return m_flag & CHUNK_RENDERING;
+}
+
+bool Chunk::IsActive()
+{
+	return m_flag & CHUNK_ACTIVE;
+}
+
+void Chunk::SetIsRendering(bool flag)
+{
+	if (flag)
+		m_flag |= CHUNK_RENDERING;
+	else
+		m_flag &= ~CHUNK_RENDERING;
 }
 
 glm::vec3 Chunk::GetPosition()
@@ -117,55 +144,6 @@ void Chunk::FindActiveVoxels()
 		nodes[i].InitNode(positions[i], m_voxelSize, cornersArray[i]);
 		m_nodeMap.insert(std::pair<glm::vec3, Octree*>(positions[i], &nodes[i]));
 	}
-}
-
-void Chunk::GenerateMesh()
-{
-	//find active nodes & their edge crossings
-	for (int x = 0; x < m_chunkSize.x; x++)
-	{
-		for (int y = 0; y < m_chunkSize.y; y++)
-		{
-			for (int z = 0; z < m_chunkSize.z; z++)
-			{
-				int corners = 0;
-
-				for (int i = 0; i < 8; i++)
-				{
-					glm::ivec3 cornerIndex = glm::vec3(x, y, z) + CHILD_MIN_OFFSETS[i];
-					corners |= (m_materialIndices[GETINDEXCHUNK(glm::ivec3(m_chunkSize + glm::vec3(1.0f)), cornerIndex.x, cornerIndex.y, cornerIndex.z)] << i);
-				}
-
-				//no material change. Isosurface not in voxel
-				if(corners == 0 || corners == 255) continue;
-
-				Octree *node = new Octree;
-
-				glm::vec3 leafPos = m_position + glm::vec3(x, y, z) * (float)m_voxelSize;
-				node->InitNode(leafPos, m_voxelSize, corners);
-				FindEdgeCrossing(node, m_hermiteMap);
-
-				if(node->m_flag & OCTREE_ACTIVE)
-					m_nodeMap.insert(std::pair<glm::vec3, Octree*>(leafPos, node));
-				else
-					delete node;
-			}
-		}
-	}
-
-	m_root = BottomUpTreeGen(m_nodeMap, m_position);
-
-	if(m_root == nullptr)
-	{
-		m_flag = ~CHUNK_ACTIVE;
-		return;
-	}
-
-	m_flag |= CHUNK_ACTIVE;
-	
-	m_root->ClusterCellBase(2000000.f);
-	m_root->GenerateVertexBuffer(m_vertices);
-	m_root->ProcessCell(m_triIndices, 2000000.f);
 }
 
 void Chunk::GetNodesInRange(const Chunk * chunk, const glm::ivec3 minrange, const glm::ivec3 maxrange, vector<Octree*> &outputNodes)
@@ -240,11 +218,15 @@ void Chunk::GenerateSeam()
 
 	Octree* root = BottomUpTreeGen(nodes, m_position);
 
-	root->GenerateVertexBuffer(m_vertices);
+	int currSize = m_vertices.size();
+	root->GenerateVertexBuffer(m_vertices);	
+	for (int i = currSize; i < m_vertices.size(); i++)
+		m_vertices[i].position -= m_position;
+
 	root->ProcessCell(m_triIndices, 1000.f);
 }
 
-void Chunk::GenerateMesh(vector<float> &heightmap)
+void Chunk::GenerateMesh()
 {
 	glm::vec3 gridSize = m_chunkSize + glm::vec3(1.0f);
 	float chunkMaxBound = m_position.y + m_chunkSize.y * m_voxelSize;
@@ -270,7 +252,29 @@ void Chunk::GenerateMesh(vector<float> &heightmap)
 
 	//m_root->ClusterCellBase(2000000.f);
 	m_root->GenerateVertexBuffer(m_vertices);
+	for (int i = 0; i < m_vertices.size(); i++)
+		m_vertices[i].position -= m_position;
 	m_root->ProcessCell(m_triIndices, 2000000.f);
+}
+
+bool  Chunk::GenerateMaterialIndices()
+{
+	vector<float> densityField;
+	bool active = true;
+	switch (m_terrainType)
+	{
+	case Density::Terrain:
+		Density::GenerateHeightMap(m_position, m_chunkSize, densityField);
+		active = Density::GenerateMaterialIndices(m_position, m_chunkSize, m_materialIndices, densityField);
+		break;
+	case Density::Cave:
+		Density::GenerateCaveIndices(m_position, m_chunkSize, m_materialIndices);
+		break;
+	default:
+		break;
+	}
+
+	return active;
 }
 
 void Chunk::GenerateHermiteField()
@@ -285,28 +289,23 @@ void Chunk::GenerateHermiteField()
 				for (int axis = 0; axis < 3; axis++)
 				{
 					glm::ivec3 index2 = glm::vec3(x, y, z) + AXIS_OFFSET[axis];
-					
-					if(GETINDEXCHUNK(glm::ivec3(m_chunkSize + glm::vec3(1.0f)), index2.x, index2.y, index2.z) > m_materialIndices.size())
+
+					if (GETINDEXCHUNK(glm::ivec3(m_chunkSize + glm::vec3(1.0f)), index2.x, index2.y, index2.z) > m_materialIndices.size())
 						continue;
 
 					int m1 = m_materialIndices[GETINDEXCHUNK(glm::ivec3(m_chunkSize + glm::vec3(1.0f)), x, y, z)];
 					int m2 = m_materialIndices[GETINDEXCHUNK(glm::ivec3(m_chunkSize + glm::vec3(1.0f)), index2.x, index2.y, index2.z)];
 
 					//no material change, no edge
-					if(m1 == m2) 
+					if (m1 == m2)
 						continue;
 
 					glm::vec3 p1 = m_position + glm::vec3(x, y, z) * (float)m_voxelSize;
 					glm::vec3 p2 = m_position + (glm::vec3(x, y, z) + AXIS_OFFSET[axis]) * (float)m_voxelSize;
 
 					//get hermite data
-					glm::vec3 p = Density::FindIntersection(m_densityType, p1, p2);
-					glm::vec3 n = Density::CalculateNormals(m_densityType, p);
-
-					if (((p1 + p2) *.5f) == glm::vec3(-9600, -1792, -9984))
-					{
-						float afd = 1.0f;
-					}
+					glm::vec3 p = Density::FindIntersection(m_terrainType, p1, p2);
+					glm::vec3 n = Density::CalculateNormals(m_terrainType, p);
 
 					//store in map
 					EdgeInfo edge(p, n);
@@ -315,10 +314,9 @@ void Chunk::GenerateHermiteField()
 			}
 		}
 	}
-
 }
 
-void Chunk::GenerateHermiteHeightMap2D(vector<float> &heightmap)
+void Chunk::GenerateHermiteHeightMap2D()
 {
 	float chunkMaxBound = m_position.y + m_chunkSize.y * m_voxelSize;
 	glm::ivec3 gridSize = m_chunkSize + glm::vec3(1.0f);
@@ -347,8 +345,8 @@ void Chunk::GenerateHermiteHeightMap2D(vector<float> &heightmap)
 			glm::vec3 p2 = node->m_minPos + CHILD_MIN_OFFSETS[c2] * (float)m_voxelSize;
 
 			//get hermite data
-			glm::vec3 p = Density::FindIntersection2D(Density::Terrain, p1, p2);
-			glm::vec3 n = Density::CalculateNormals2D(Density::Terrain, p);
+			glm::vec3 p = Density::FindIntersection2D(m_terrainType, p1, p2);
+			glm::vec3 n = Density::CalculateNormals2D(m_terrainType, p);
 
 			//store in map
 			EdgeInfo edge(p, n);
@@ -360,45 +358,15 @@ void Chunk::GenerateHermiteHeightMap2D(vector<float> &heightmap)
 	}
 }
 
-void * Chunk::BeginModifyVertexBuffer(int &size)
+void Chunk::BindMesh()
 {
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_vertices.size(), nullptr, GL_DYNAMIC_DRAW);
-	void *vboDataPtr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-
-	return vboDataPtr;
-}
-
-void Chunk::EndModifyVertexBuffer()
-{
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-}
-
-void * Chunk::BeginModifyIndexBuffer(int &size)
-{
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-	size = 0;
-	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-	void *eboDataPtr = glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_WRITE_ONLY);
-
-	return eboDataPtr;
-}
-
-void Chunk::EndModifyIndexBuffer()
-{
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-}
-
-void Chunk::BindMesh(GLuint vbo, GLuint ebo)
-{
-	//ClearBufferedData();
-
-	m_vbo = vbo;
-	m_ebo = ebo;
-
+	ClearBufferedData();
+	//sanity check
+	if (m_vbo == 0 || m_ebo == 0)
+	{
+		LogToUnity("Must set mesh VBO and EBO before binding");
+		return;
+	}
 	if((m_vertices.size() == 0) || m_triIndices.size() == 0)
 	{
 		m_flag = ~CHUNK_ACTIVE;
@@ -416,85 +384,20 @@ void Chunk::BindMesh(GLuint vbo, GLuint ebo)
 		vertices.push_back(vert);
 	}
 
-	string msg = "Vertices binding size " + to_string(vertices.size());
-	LogToUnity(msg.c_str());
-
-	msg = "Triangle size " + to_string(m_triIndices.size());
-	LogToUnity(msg.c_str());
-
-	msg = "VBO: " + to_string(m_vbo) + ", EBO: " + to_string(m_ebo);
-	LogToUnity(msg.c_str());
-
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
-
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * vertices.size(), &vertices[0]);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * m_triIndices.size(), &m_triIndices[0]);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_triIndices.size(), &m_triIndices[0], GL_DYNAMIC_DRAW);
-
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, pos));
-	////now normals
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, normal));
-
-	//GLint bufferSize = 0;
-	//void *vboDataPtr = BeginModifyVertexBuffer(bufferSize);
-
-	//LogToUnity("BufferSize: " + to_string(bufferSize));
-	//LogToUnity("VBO: " + to_string(m_vbo) + ", EBO: " + to_string(m_ebo));
-	//if (!vboDataPtr)
-	//{
-	//	LogToUnity("VBO IS NULLL!");
-	//	return;
-	//}
-
-	//int vertexStride = bufferSize / m_vertices.size();
-	//char *bufferPtr = (char *)vboDataPtr;
-	//Vertex *vertexPtr = (Vertex*)bufferPtr;
-
-	//for (int i = 0; i < m_vertices.size(); i++)
-	//{
-	//	const VoxelVertex &src = m_vertices[i];
-	//	Vertex &dst = *(Vertex*)bufferPtr;
-
-	//	dst.pos.x = src.position.x;
-	//	dst.pos.y = src.position.y;
-	//	dst.pos.z = src.position.z;
-	//	dst.normal.x = src.normal.x;
-	//	dst.normal.y = src.normal.y;
-	//	dst.normal.z = src.normal.z;
-	//	bufferPtr += vertexStride;
-	//}
-
-	//string msg = "VBO buffer size: " + to_string(bufferSize);
-	//LogToUnity(msg);
-	//EndModifyVertexBuffer();
-
-	//int indexSize;
-	//void *indexBufferPtr = BeginModifyIndexBuffer(indexSize);
-	//if (!indexBufferPtr)
-	//{
-	//	LogToUnity("EBO IS NULLL!");
-	//	return;
-	//}
-	//msg = "EBO buffer size: " + to_string(indexSize);
-	//LogToUnity(msg);
-
-	//auto indexPtr = (GLuint *)(indexBufferPtr);
-	//for (int i = 0; i < m_triIndices.size(); i++)
-	//	indexPtr[i] = m_triIndices[i];
-
-	//EndModifyIndexBuffer();
 }
 
 bool Chunk::IsActive()
 {
 	return m_flag & CHUNK_ACTIVE;
+}
+
+void Chunk::SetIsRendering(bool flag)
+{
 }
 
 int Chunk::GetVertexCount()
@@ -505,13 +408,4 @@ int Chunk::GetVertexCount()
 int Chunk::GetIndicesCount()
 {
 	return m_triIndices.size();
-}
-
-void Chunk::Render()
-{
-	if(~m_flag & CHUNK_ACTIVE) return;
-
-	glBindVertexArray(m_vao);
-	glDrawElements(GL_TRIANGLES, m_triIndices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
 }

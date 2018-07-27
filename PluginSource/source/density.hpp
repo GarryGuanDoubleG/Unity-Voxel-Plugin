@@ -20,6 +20,7 @@ public:
 
 	enum DensityType {Terrain, Cave};
 public:
+	static FastNoiseSIMD * GetTerrainType();
 	static void SetVoxelSize(const float & voxelSize);
 
 	static void SetMaxVoxelHeight(const float & height);

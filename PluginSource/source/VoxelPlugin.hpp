@@ -38,5 +38,9 @@ using namespace std;
 #include "PlatformBase.h"
 
 
+//voxel events
+#define CHUNK_GEN_FINISHED  1
+
 extern void error(GLenum e);
 extern "C" void LogToUnity(const string &msg);
+extern "C" void ThrowEventToUnity(uint8_t eventVal);
