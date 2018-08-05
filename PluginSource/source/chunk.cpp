@@ -73,16 +73,11 @@ void Chunk::ClearBufferedData()
 
 }
 
-bool Chunk::SetBuffers(GLuint vbo, GLuint ebo)
-{
-	m_vbo = vbo;
-	m_ebo = ebo;
-}
-
 bool Chunk::HasGeneratedSeam()
 {
 	return m_flag & GENERATED_SEAM;
 }
+
 bool Chunk::IsRendering()
 {
 	return m_flag & CHUNK_RENDERING;
@@ -358,6 +353,12 @@ void Chunk::GenerateHermiteHeightMap2D()
 	}
 }
 
+void Chunk::SetBuffers(const GLuint vbo, const GLuint ebo)
+{
+	m_vbo = vbo;
+	m_ebo = ebo;
+}
+
 void Chunk::BindMesh()
 {
 	ClearBufferedData();
@@ -389,15 +390,6 @@ void Chunk::BindMesh()
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * m_triIndices.size(), &m_triIndices[0]);
-}
-
-bool Chunk::IsActive()
-{
-	return m_flag & CHUNK_ACTIVE;
-}
-
-void Chunk::SetIsRendering(bool flag)
-{
 }
 
 int Chunk::GetVertexCount()

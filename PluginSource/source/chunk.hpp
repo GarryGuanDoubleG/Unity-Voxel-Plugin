@@ -58,8 +58,6 @@ public:
 	
 	void ClearBufferedData();
 
-	bool SetBuffers(GLuint vbo, GLuint ebo);
-
 	bool HasGeneratedSeam();
 
 	bool IsRendering();
@@ -85,9 +83,11 @@ public:
 	
 	void GenerateHermiteHeightMap2D();
 
+	void SetBuffers(const GLuint vbo, const GLuint ebo);
+
 	void BindMesh();
 	
-	bool IsActive();
 	int GetVertexCount();
+
 	int GetIndicesCount();
 };

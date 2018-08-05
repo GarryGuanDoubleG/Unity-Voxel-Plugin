@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\..\source\PlatformBase.h" />
-    <ClInclude Include="..\..\source\RenderAPI.h" />
     <ClInclude Include="..\..\source\GLEW\glew.h">
       <Filter>GLEW</Filter>
     </ClInclude>
@@ -66,16 +64,56 @@
     <ClInclude Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_internal.h">
       <Filter>FastNoise</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\enkiTS\TaskScheduler.h">
+      <Filter>enkiTS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\enkiTS\TaskScheduler_c.h">
+      <Filter>enkiTS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\enkiTS\Threads.h">
+      <Filter>enkiTS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\enkiTS\Atomics.h">
+      <Filter>enkiTS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\enkiTS\LockLessMultiReadPipe.h">
+      <Filter>enkiTS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\PlatformBase.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\RenderAPI.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\async.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\async_logger.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\common.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\formatter.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\logger.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\spdlog.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\tweakme.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\spdlog\version.h">
+      <Filter>spdlog</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\RenderAPI.cpp" />
-    <ClCompile Include="..\..\source\RenderAPI_D3D11.cpp" />
-    <ClCompile Include="..\..\source\RenderAPI_OpenGLCoreES.cpp" />
-    <ClCompile Include="..\..\source\RenderingPlugin.cpp" />
     <ClCompile Include="..\..\source\GLEW\glew.c">
       <Filter>GLEW</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\RenderAPI_D3D12.cpp" />
     <ClCompile Include="..\..\source\chunk.cpp">
       <Filter>Voxels</Filter>
     </ClCompile>
@@ -127,6 +165,27 @@
     <ClCompile Include="..\..\source\FastNoiseSIMD\FastNoiseSIMD_sse41.cpp">
       <Filter>FastNoise</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\enkiTS\TaskScheduler.cpp">
+      <Filter>enkiTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\enkiTS\TaskScheduler_c.cpp">
+      <Filter>enkiTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderAPI.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderAPI_D3D11.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderAPI_D3D12.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderAPI_OpenGLCoreES.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\RenderingPlugin.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLEW">
@@ -141,11 +200,22 @@
     <Filter Include="FastNoise">
       <UniqueIdentifier>{d1325b12-6a50-435f-8996-103c63f3bcdd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="enkiTS">
+      <UniqueIdentifier>{146197b9-9912-4eca-999d-91e63d925c9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{fe6d4d71-f856-4ad7-97a1-52d6d65d5a24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spdlog">
+      <UniqueIdentifier>{8aa5099d-60d0-48ca-85cd-4467d1420289}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\source\RenderingPlugin.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\source\RenderAPI_Metal.mm" />
+    <None Include="..\..\source\RenderAPI_Metal.mm">
+      <Filter>Rendering</Filter>
+    </None>
+    <None Include="..\..\source\RenderingPlugin.def">
+      <Filter>Rendering</Filter>
+    </None>
   </ItemGroup>
 </Project>

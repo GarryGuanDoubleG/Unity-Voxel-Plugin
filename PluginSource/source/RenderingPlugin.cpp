@@ -284,24 +284,24 @@ static void ModifyVertexBuffer()
 	s_CurrentAPI->EndModifyVertexBuffer(bufferHandle);
 }
 
-
-static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
-{
-	// Unknown / unsupported graphics device type? Do nothing
-	if (s_CurrentAPI == NULL)
-		return;
-
-	DrawColoredTriangle();
-	ModifyTexturePixels();
-	ModifyVertexBuffer();
-}
-
-
-// --------------------------------------------------------------------------
-// GetRenderEventFunc, an example function we export which is used to get a rendering event callback function.
-
-extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRenderEventFunc()
-{
-	return OnRenderEvent;
-}
+//
+//static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
+//{
+//	// Unknown / unsupported graphics device type? Do nothing
+//	if (s_CurrentAPI == NULL)
+//		return;
+//
+//	DrawColoredTriangle();
+//	ModifyTexturePixels();
+//	ModifyVertexBuffer();
+//}
+//
+//
+//// --------------------------------------------------------------------------
+//// GetRenderEventFunc, an example function we export which is used to get a rendering event callback function.
+//
+//extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRenderEventFunc()
+//{
+//	return OnRenderEvent;
+//}
 

@@ -6,6 +6,12 @@
 //static float g_time;
 static VoxelManager *s_VoxelManager = nullptr;
 
+enum RenderEvents
+{
+	ChunkGenerated = 0,
+	BindChunks = 1
+};
+
 //log call back
 extern "C"
 {
@@ -79,13 +85,13 @@ static GLuint s_count;
 //
 extern "C"
 {
-	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API InitializeVoxelPlugin(int voxelSize, int chunkRange, int chunkSize, float maxHeight)
+	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API InitializeVoxelPlugin(int voxelSize, int chunkRange, float startRange, int chunkSize, float maxHeight)
 	{
 		error(glGetError());
 
 		LogToUnity("Creating Voxel Manager");
 		s_VoxelManager = new VoxelManager();
-		s_VoxelManager->Init(voxelSize, chunkRange, chunkSize, maxHeight);				
+		s_VoxelManager->Init(voxelSize, chunkRange, startRange, chunkSize, maxHeight);
 	}
 
 	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GenerateChunksInRange(int count, glm::vec3 * indices)
@@ -113,9 +119,16 @@ extern "C"
 	{
 		return s_VoxelManager->GetNewChunkCount();
 	}
+
+	//This might not be needed
 	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetNewChunkData(int count, int *vertCount, int *triCount)
 	{
 		s_VoxelManager->GetNewChunkMeshData(count, vertCount, triCount);
+	}
+
+	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetNewChunkIndices(int count, glm::vec3 * indices)
+	{
+		s_VoxelManager->GetNewChunkIndices(count, indices);
 	}
 
 	//void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetChunkMeshSizes(int *vertCount, int *triCount)
@@ -138,21 +151,28 @@ extern "C"
 		}
 	}
 
-	void BindChunk(glm::vec3 indices, GLuint vbo, GLuint ebo)
-	{
-		s_VoxelManager->BindChunk(indices, vbo, ebo);
-	}
-
 	static void UNITY_INTERFACE_API OnChunkInitEvent(int eventID)
 	{
 		// Unknown / unsupported graphics device type? Do nothing
-		s_VoxelManager->BindChunks(s_count, s_chunkIndicesToBind, s_vboArr, s_eboArr);
+		//s_VoxelManager->BindChunks(s_count, s_chunkIndicesToBind, s_vboArr, s_eboArr);
+	}
+
+	static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
+	{
+		switch (eventID)
+		{
+		case RenderEvents::BindChunks:
+			s_VoxelManager->BindChunks(s_count, s_chunkIndicesToBind, s_vboArr, s_eboArr);
+			break;
+		default:
+			break;
+		}
 	}
 
 	// --------------------------------------------------------------------------
 	// GetRenderEventFunc, an example function we export which is used to get a rendering event callback function.
-	extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API OnInitVoxelsEvent()
+	extern "C" UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRenderEventFunc()
 	{
-		return OnChunkInitEvent;
+		return OnRenderEvent;
 	}
 }

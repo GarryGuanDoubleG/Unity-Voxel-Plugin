@@ -1,5 +1,7 @@
 #include "VoxelPlugin.hpp"
 #include "enkiTS\TaskScheduler.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include <string>
 
 using namespace enki;
@@ -72,28 +74,90 @@ VoxelManager::~VoxelManager()
 	m_chunkMap.empty();
 }
 
-void VoxelManager::Init(int voxelSize, int range, int chunkSize, float maxHeight)
+
+void VoxelManager::Init(int voxelSize, int range, float startRange, int chunkSize, float maxHeight)
 {
-	m_voxelSize = voxelSize;
-	m_renderRange = range;
-	m_chunkSize = chunkSize;
-	m_activeChunks = 0;
-	int x_range = 2 * m_renderRange + 1;
-	int z_range = x_range;
-	int y_range = 3;
-	m_totalChunks = x_range * y_range * z_range;
+	auto logger = spdlog::basic_logger_st("basic_logger", "custom logger.txt");
+	logger->info("Initializing");
+	logger->info("test");
 
-	m_chunkMap.reserve(m_totalChunks);
-	m_chunks.reserve(m_totalChunks);
-	Chunk * chunks = new Chunk[m_totalChunks];
-	for (int i = 0; i < m_totalChunks; i++)
-		m_chunks[i] = &chunks[i];
+	//m_voxelSize = voxelSize;
+	//m_renderRange = range;
+	//m_chunkSize = chunkSize;
+	//m_activeChunks = 0;
+	//int x_range = 2 * m_renderRange + 1;
+	//int z_range = x_range;
+	//int y_range = 3;
+	//m_totalChunks = x_range * y_range * z_range;
 
-	Density::SetVoxelSize(m_voxelSize);
-	Density::SetMaxVoxelHeight(maxHeight);
-	Density::Initialize();
+	//m_chunkMap.reserve(m_totalChunks);
+	//m_chunks.reserve(m_totalChunks);
+	//Chunk * chunks = new Chunk[m_totalChunks];
+	//for (int i = 0; i < m_totalChunks; i++)
+	//	m_chunks[i] = &chunks[i];
 
-	g_TScheduler.Initialize();
+	//logger->info("Initializing Density...");
+
+	//Density::SetVoxelSize(m_voxelSize);
+	//Density::SetMaxVoxelHeight(maxHeight);
+	//Density::Initialize();
+
+	//logger->info("Initializing TaskScheduler");
+	//g_TScheduler.Initialize();
+
+	//logger->info("Setting Up Starting chunks");
+	//int startChunkCount = (startRange * 2 + 1);//x, y, z
+	//startChunkCount = startChunkCount * startChunkCount * startChunkCount;
+	//glm::vec3 * indices = new glm::vec3[startChunkCount];
+	//int i = 0;
+	//for (float x = -startRange; x <= startRange; x++)
+	//{
+	//	for (float z = -startRange; z <= startRange; z++)
+	//	{
+	//		for (float y = -startRange; y <= startRange; y++)
+	//		{
+	//			indices[i++] = glm::ivec3(x, y, z);
+	//		}
+	//	}
+	//}
+
+	////generate new chunks and wait
+	//logger->info("Generating Start Chunks ...");
+	//GenerateChunksInRange(startChunkCount, indices);
+	//logger->info("Waiting for completion");
+	//g_TScheduler.WaitforAll();
+	//logger->info("Checking Chunk Jobs");
+	//CheckChunkJobs();	
+	//g_TScheduler.WaitforAll();
+	//logger->info("Finished. Seam Jobs Queued");
+	//logger->info("Checking Seam Jobs");
+	//CheckSeamJobs();
+
+	//logger->info("Deleting indices");
+	//delete indices;
+
+	//logger->info("Queuing Max Render Range Jobs");
+	//std::vector<glm::vec3> renderIndices;
+	//renderIndices.reserve(m_renderRange * m_renderRange * m_renderRange);
+	//int count = 0;
+	////queue up the rest of the chunks within render range
+	//for (int x = -m_renderRange; x <= m_renderRange; x++)
+	//{
+	//	for (int z = -m_renderRange; z <= m_renderRange; z++)
+	//	{
+	//		for (int y = -m_renderRange; y <= m_renderRange; y++)
+	//		{
+	//			glm::vec3 index(x, y, z);
+	//			if (!m_chunkInitMap[index])
+	//				renderIndices[count++] = index;
+	//		}
+	//	}
+	//}
+
+	//logger->info("Generating Task");
+	//GenerateChunksInRange(count, &renderIndices[0]);
+
+	//logger->info("Voxel Init Finished");
 }
 
 void VoxelManager::AssignChunkNeighbors(Chunk *chunk)
@@ -172,6 +236,18 @@ void VoxelManager::GetNewChunkMeshData(const int count, int * vertCount, int *tr
 	}
 }
 
+void VoxelManager::GetNewChunkIndices(const int count, glm::vec3 * indices)
+{
+	int i = 0;
+	for (const auto chunk : g_newChunks)
+	{
+		if (i >= count) break;
+
+		indices[i] = chunk->m_chunkIndex;
+		i++;
+	}
+}
+
 void VoxelManager::BindChunk(const glm::vec3 &indices, const GLuint vbo, const GLuint ebo)
 {
 	Chunk * chunk = m_chunkMap[indices];
@@ -181,14 +257,20 @@ void VoxelManager::BindChunk(const glm::vec3 &indices, const GLuint vbo, const G
 		chunk->BindMesh();
 	}
 }
+
 void VoxelManager::BindChunks(int count, glm::vec3 *indices, GLuint* vboArr, GLuint * eboArr)
 {
 	for (int i = 0; i < count; i++)
 	{
-		Chunk *chunk = m_chunkMap[indices[i]];
-		if (chunk && chunk->GetVertexCount > 0)
-			chunk->BindMesh((GLuint)(size_t)vboArr[i], (GLuint)(size_t)eboArr[i]);
+		Chunk *chunk = m_chunkMap[indices[i]];		
+		if (chunk && chunk->GetVertexCount() > 0)
+		{
+			chunk->SetBuffers((GLuint)(size_t)vboArr[i], (GLuint)(size_t)eboArr[i]);
+			chunk->BindMesh();			
+		}
 	}
+
+	g_newChunks.clear();
 }
 
 void VoxelManager::GetChunkMeshSizes(int * vertSizes, int * indiceSizes)
@@ -228,7 +310,7 @@ void VoxelManager::GetActiveChunkPositions(int count, glm::vec3 *positions)
 	}
 }
 
-void VoxelManager::Update(glm::vec3 playerPos)
+void VoxelManager::CheckChunkJobs()
 {
 	for (int i = 0; i < g_genChunkTasks.size(); i++)
 	{
@@ -262,7 +344,10 @@ void VoxelManager::Update(glm::vec3 playerPos)
 			g_genChunkTasks.erase(g_genChunkTasks.begin() + i);
 		}
 	}
+}
 
+void VoxelManager::CheckSeamJobs()
+{
 	for (int i = 0; i < g_genSeamTasks.size(); i++)
 	{
 		if (g_genSeamTasks[i].GetIsComplete())
@@ -270,17 +355,42 @@ void VoxelManager::Update(glm::vec3 playerPos)
 			GenerateSeamTask *task = &g_genSeamTasks[i];
 
 			for (int j = 0; j < task->m_SetSize; j++)
-			{				
+			{
 				Chunk *chunk = task->chunks[j];
 				g_newChunks.push_back(chunk);
 				g_newChunkVertCount.push_back(chunk->GetVertexCount());
 				g_newChunkTriCount.push_back(chunk->GetIndicesCount());
 			}
-			
-			g_genSeamTasks.erase(g_genSeamTasks.begin() + i);
-			std::cout << "ChunkGen Complete! " << std::endl;
-		}
 
-		ThrowEventToUnity(CHUNK_GEN_FINISHED);
+			g_genSeamTasks.erase(g_genSeamTasks.begin() + i);
+			std::cout << "ChunkGen Complete! " << std::endl;			
+		}
 	}
+
+	//ideally this binds new chunks immediately
+	if(g_newChunks.size() > 0)
+		ThrowEventToUnity(CHUNK_GEN_FINISHED);
+}
+
+void VoxelManager::Update(glm::vec3 playerPos)
+{
+	CheckChunkJobs();
+	CheckSeamJobs();
+
+	glm::ivec3 newPlayerChunkIndex = glm::ivec3(playerPos) / m_chunkSize / m_voxelSize;
+
+	//if (newPlayerChunkIndex != m_playerChunkIndex)
+	//{
+	//	glm::ivec3 *indices = new glm::ivec3[m_renderRange * 3];
+	//	glm::ivec3 newChunkDir = newPlayerChunkIndex - m_playerChunkIndex;
+
+	//	for (int i = 0; i < m_renderRange)
+	//	{
+
+	//	}
+
+	//	
+
+	//	GenerateChunksInRange();
+	//}
 }
