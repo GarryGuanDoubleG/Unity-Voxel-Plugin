@@ -33,7 +33,7 @@ extern "C"
 //voxel event callback
 extern "C"
 {
-	typedef void(*VoxelEvent) (uint8_t eventVal);
+	typedef void(*VoxelEvent) (int eventVal);
 	static VoxelEvent eventHandler = nullptr;
 
 	void UNITY_INTERFACE_EXPORT SetVoxelEventHandler(VoxelEvent eventcallBack)
@@ -41,7 +41,7 @@ extern "C"
 		eventHandler = eventcallBack;
 	}
 
-	void ThrowEventToUnity(uint8_t eventVal)
+	void ThrowEventToUnity(int eventVal)
 	{
 		if (eventHandler != nullptr)
 			(*eventHandler)(eventVal);
@@ -121,9 +121,9 @@ extern "C"
 	}
 
 	//This might not be needed
-	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetNewChunkData(int count, int *vertCount, int *triCount)
+	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetNewChunkTriangles(int count, int *triArr)
 	{
-		s_VoxelManager->GetNewChunkMeshData(count, vertCount, triCount);
+		s_VoxelManager->GetNewChunkTriangles(count, triArr);
 	}
 
 	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetNewChunkIndices(int count, glm::vec3 * indices)
@@ -131,10 +131,10 @@ extern "C"
 		s_VoxelManager->GetNewChunkIndices(count, indices);
 	}
 
-	//void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetChunkMeshSizes(int *vertCount, int *triCount)
-	//{
-	//	s_VoxelManager->GetChunkMeshSizes(vertCount, triCount);
-	//}
+	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API Update(glm::vec3 playerPos)
+	{
+		s_VoxelManager->Update(playerPos);
+	}
 
 	void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetActiveChunkPositions(int count, glm::vec3 *positions)
 	{
@@ -162,7 +162,14 @@ extern "C"
 		switch (eventID)
 		{
 		case RenderEvents::BindChunks:
+			if (s_count == 0) 
+				break;
 			s_VoxelManager->BindChunks(s_count, s_chunkIndicesToBind, s_vboArr, s_eboArr);
+			//reset static vars
+			s_count = 0;
+			s_chunkIndicesToBind = nullptr;
+			s_vboArr = nullptr;
+			s_eboArr = nullptr;
 			break;
 		default:
 			break;

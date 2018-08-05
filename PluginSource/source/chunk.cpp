@@ -355,17 +355,22 @@ void Chunk::GenerateHermiteHeightMap2D()
 
 void Chunk::SetBuffers(const GLuint vbo, const GLuint ebo)
 {
+	if (vbo == 0 || ebo == 0)
+	{
+		LogToUnity("VBO & EBO passed in must not be 0");
+		return;
+	}
 	m_vbo = vbo;
 	m_ebo = ebo;
 }
 
 void Chunk::BindMesh()
 {
-	ClearBufferedData();
+	//ClearBufferedData();
 	//sanity check
 	if (m_vbo == 0 || m_ebo == 0)
 	{
-		LogToUnity("Must set mesh VBO and EBO before binding");
+		LogToUnity("Buffers were not set");
 		return;
 	}
 	if((m_vertices.size() == 0) || m_triIndices.size() == 0)
@@ -386,10 +391,10 @@ void Chunk::BindMesh()
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex) * vertices.size(), &vertices[0]);
+	glBufferData(GL_ARRAY_BUFFER,sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * m_triIndices.size(), &m_triIndices[0]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_triIndices.size(), &m_triIndices[0], GL_STATIC_DRAW);
 }
 
 int Chunk::GetVertexCount()

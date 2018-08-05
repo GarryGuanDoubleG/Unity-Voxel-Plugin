@@ -43,4 +43,4 @@ using namespace std;
 
 extern void error(GLenum e);
 extern "C" void LogToUnity(const string &msg);
-extern "C" void ThrowEventToUnity(uint8_t eventVal);
+extern "C" void ThrowEventToUnity(int eventVal);

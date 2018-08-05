@@ -33,7 +33,9 @@ public:
 
 	int GetNewChunkCount();
 
-	void GetNewChunkMeshData(const int count, int * vertCount, int * triCount);
+	void GetNewChunkTriangles(const int count, int * triCount);
+
+	//void GetNewChunkMeshData(const int count, int * vertCount, int * triCount);
 
 	void GetNewChunkIndices(const int count, glm::vec3 *indices);
 
